@@ -170,6 +170,13 @@ html.has-motion [data-fade] { visibility: hidden; }
   transform-origin: top right;
   visibility: hidden;
   opacity: 0;
+  transition-property: none;               /* GSAP animates it; visibility must flip instantly so items can take focus */
+}
+/* Invisible bridge over the 10px gap, so moving down to the menu keeps it open */
+.menu::before {
+  content: "";
+  position: absolute;
+  inset: -11px 0 100%;
 }
 
 .menu__item {

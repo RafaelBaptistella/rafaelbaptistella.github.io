@@ -8,6 +8,18 @@
   const motion = hasGsap && html.classList.contains("has-motion");
   const isTouch = matchMedia("(hover: none)").matches;
   const EASE = "expo.out";
+  // Reveal timing, in seconds (distances in px). Kept short and small so motion
+  // supports the content without making anyone wait for it.
+  const MOTION = {
+    header: 0.6,
+    lines: 0.6,
+    lineStagger: 0.04,
+    block: 0.6,
+    blockRise: 16,
+    media: 0.9,
+    mediaScale: 1.02,
+    pageExit: 0.25,
+  };
   const d = (seconds) => (motion ? seconds : 0);
 
   if (!motion) html.classList.remove("has-motion");
@@ -100,42 +112,39 @@
   function introHeader() {
     gsap.from(".header .logo, .nav > *", {
       autoAlpha: 0,
-      y: -14,
-      duration: 1.1,
+      y: -8,
+      duration: MOTION.header,
       ease: EASE,
-      stagger: 0.08,
-      delay: 0.05,
+      stagger: 0.04,
       clearProps: "transform",
     });
   }
 
-  // Replays `anim` every time `el` scrolls into view (from either direction)
-  // and rewinds it once `el` is fully off screen, ready for the next pass.
-  // The play positions are clamped to the scrollable range: elements at the very
-  // end of the page (the footer on short phone screens) could otherwise get a
-  // start point past the maximum scroll and only reveal on overscroll. Clamping
-  // pins above-the-fold elements to a start of 0, which never "enters" at the
-  // top of the page, so those are played on refresh instead.
-  function replayInView(el, anim) {
-    const play = () => { if (!anim.progress()) anim.restart(true); };
-    const rewind = () => anim.pause(0);
-    return [
-      ScrollTrigger.create({
-        trigger: el,
-        start: "clamp(top 92%)",
-        end: "clamp(bottom 8%)",
-        onEnter: play,
-        onEnterBack: play,
-        onRefresh: (self) => { if (self.start === 0 && self.scroll() === 0) play(); },
-      }),
-      ScrollTrigger.create({ trigger: el, start: "top bottom", end: "bottom top", onLeave: rewind, onLeaveBack: rewind }),
-    ];
+  // Plays `anim` once, the first time `el` scrolls into view; it stays revealed after that.
+  // The start is clamped to the scrollable range: elements at the very end of the page
+  // (the footer on short phone screens) could otherwise get a start point past the
+  // maximum scroll and only reveal on overscroll. Clamping pins above-the-fold elements
+  // to a start of 0, which never "enters" at the top of the page, so those are played
+  // on refresh instead.
+  function revealOnce(el, anim, onPlay) {
+    const play = () => {
+      onPlay?.();
+      anim.play();
+    };
+    return ScrollTrigger.create({
+      trigger: el,
+      start: "clamp(top 92%)",
+      once: true,
+      onEnter: play,
+      onRefresh: (self) => { if (self.start === 0 && self.scroll() === 0) play(); },
+    });
   }
 
   // Each line sits in an overflow-hidden mask and slides up into view.
   function revealLines(el) {
     const delay = parseFloat(el.dataset.delay) || 0;
-    let triggers = [];
+    let trigger = null;
+    let played = false;
 
     SplitText.create(el, {
       type: "lines",
@@ -144,16 +153,17 @@
       autoSplit: true,
       onSplit(self) {
         gsap.set(el, { visibility: "visible" });
-        triggers.forEach((t) => t.kill()); // re-split on resize: rebuild against the new lines
+        trigger?.kill(); // re-split on resize: rebuild against the new lines
+        if (played) return; // already revealed: new lines just stay in place
         const anim = gsap.from(self.lines, {
           yPercent: 110,
-          duration: 1.2,
+          duration: MOTION.lines,
           ease: EASE,
-          stagger: 0.09,
+          stagger: MOTION.lineStagger,
           delay,
           paused: true,
         });
-        triggers = replayInView(el, anim);
+        trigger = revealOnce(el, anim, () => (played = true));
         return anim;
       },
     });
@@ -163,9 +173,9 @@
     const media = el.querySelector(".project__media");
     const tl = gsap.timeline({ paused: true });
 
-    tl.fromTo(el, { autoAlpha: 0, y: 48 }, { autoAlpha: 1, y: 0, duration: 1.3, ease: EASE, clearProps: "transform" });
-    if (media) tl.fromTo(media, { scale: 1.06 }, { scale: 1, duration: 1.8, ease: EASE, clearProps: "transform" }, 0);
-    replayInView(el, tl);
+    tl.fromTo(el, { autoAlpha: 0, y: MOTION.blockRise }, { autoAlpha: 1, y: 0, duration: MOTION.block, ease: EASE, clearProps: "transform" });
+    if (media) tl.fromTo(media, { scale: MOTION.mediaScale }, { scale: 1, duration: MOTION.media, ease: EASE, clearProps: "transform" }, 0);
+    revealOnce(el, tl);
   }
 
   /* ------------------------------------------------------------------------
@@ -177,9 +187,16 @@
     const menu = document.getElementById("contact-menu");
     if (!toggle || !menu) return;
     const items = [...menu.querySelectorAll(".menu__item")];
+    const wrap = toggle.closest(".nav__contact");
+    const CLOSE_DELAY = 150; // ms of grace when the mouse briefly leaves the button and menu
     let open = false;
+    let hovering = false;
+    let closeTimer = null;
+
+    if (hasGsap) gsap.set(menu, { y: -6, scale: 0.96 });
 
     const setOpen = (next, { focus = false } = {}) => {
+      clearTimeout(closeTimer);
       if (next === open) return;
       open = next;
       toggle.setAttribute("aria-expanded", String(open));
@@ -188,17 +205,40 @@
         menu.style.visibility = open ? "visible" : "hidden";
         menu.style.opacity = open ? "1" : "0";
       } else if (open) {
-        gsap.killTweensOf([menu, items]);
-        gsap.fromTo(menu, { autoAlpha: 0, y: -6, scale: 0.96 }, { autoAlpha: 1, y: 0, scale: 1, duration: d(0.4), ease: "power3.out" });
-        gsap.fromTo(items, { autoAlpha: 0, y: -4 }, { autoAlpha: 1, y: 0, duration: d(0.35), ease: "power3.out", stagger: 0.04, delay: d(0.05) });
+        // Coming back mid-close continues from the current state instead of restarting
+        const fullyClosed = gsap.getProperty(menu, "opacity") === 0;
+        gsap.killTweensOf(menu);
+        gsap.to(menu, { autoAlpha: 1, y: 0, scale: 1, duration: d(0.4), ease: "power3.out" });
+        menu.style.visibility = "visible"; // right away, so keyboard focus can land on an item
+        if (fullyClosed) {
+          gsap.killTweensOf(items);
+          gsap.fromTo(items, { opacity: 0, y: -4 }, { opacity: 1, y: 0, duration: d(0.35), ease: "power3.out", stagger: 0.04, delay: d(0.05) });
+        }
       } else {
-        gsap.killTweensOf([menu, items]);
-        gsap.to(menu, { autoAlpha: 0, y: -4, scale: 0.98, duration: d(0.2), ease: "power2.in" });
+        gsap.killTweensOf(menu);
+        gsap.to(menu, { autoAlpha: 0, y: -6, scale: 0.96, duration: d(0.2), ease: "power2.in" });
       }
       if (open && focus) items[0].focus();
     };
 
-    toggle.addEventListener("click", (e) => setOpen(!open, { focus: e.detail === 0 }));
+    // Mouse opens on hover; touch has no hover, so it falls through to the tap below
+    wrap.addEventListener("pointerenter", (e) => {
+      if (e.pointerType !== "mouse") return;
+      hovering = true;
+      setOpen(true);
+    });
+    wrap.addEventListener("pointerleave", (e) => {
+      if (e.pointerType !== "mouse") return;
+      hovering = false;
+      closeTimer = setTimeout(() => setOpen(false), CLOSE_DELAY);
+    });
+
+    // Tap or keyboard toggles; a mouse click while hovering just keeps it open
+    toggle.addEventListener("click", (e) => {
+      const keyboard = e.detail === 0;
+      if (hovering && !keyboard) return;
+      setOpen(!open, { focus: keyboard });
+    });
     items.forEach((item) => item.addEventListener("click", () => setOpen(false)));
 
     document.addEventListener("click", (e) => {
@@ -286,7 +326,7 @@
       }
       gsap.to("#smooth-wrapper, .header", {
         autoAlpha: 0,
-        duration: 0.45,
+        duration: MOTION.pageExit,
         ease: "power2.in",
         onComplete: () => (location.href = url.href),
       });
