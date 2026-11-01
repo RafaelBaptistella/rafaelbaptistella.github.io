@@ -331,24 +331,36 @@ html.has-motion [data-fade] { visibility: hidden; }
   transition: filter var(--dur-slow) var(--ease-out);
 }
 
-.project__data {
+/* Title · tags · subtitle: shared by the home cards and the project page headers */
+.meta {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.project__title {
+/* wrap-reverse: if the two don't fit on one row, the tags go above the title */
+.meta__row {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px 16px;
+}
+
+.meta__title {
   font-size: var(--fs-lg);
   line-height: var(--lh-lg);
   font-weight: 500;
   color: var(--text-primary);
 }
 
-.project__subtitle {
+.meta__tags,
+.meta__subtitle {
   font-size: var(--fs-md);
   line-height: var(--lh-md);
   color: var(--text-medium);
 }
+.meta__tags { text-transform: uppercase; }
 
 @media (hover: hover) {
   a.project__link:hover { transform: scale(var(--card-hover-scale)); }
@@ -471,13 +483,6 @@ html.has-motion [data-fade] { visibility: hidden; }
   display: flex;
   flex-direction: column;
   gap: var(--case-gap);
-}
-
-.case__title {
-  font-size: var(--fs-lg);
-  line-height: var(--lh-lg);
-  font-weight: 500;
-  color: var(--text-primary);
 }
 
 .case__text {
@@ -646,6 +651,8 @@ html.has-motion [data-fade] { visibility: hidden; }
     --case-gap: 28px;
   }
   .hero__lede { font-size: 15px; line-height: 22px; max-width: 480px; }
+  .meta__row { flex-flow: column nowrap; align-items: flex-start; }
+  .meta__tags { order: -1; font-size: var(--fs-sm); line-height: var(--lh-sm); }
   .footer { padding-block: 32px; }
 
   .about { display: grid; grid-template-columns: 120px 1fr; column-gap: 24px; }
@@ -675,6 +682,8 @@ html.has-motion [data-fade] { visibility: hidden; }
   .hero__lede { font-size: 15px; line-height: 22px; }
 
   .project__link { gap: 12px; }
+  .meta__row { flex-flow: column nowrap; align-items: flex-start; }
+  .meta__tags { order: -1; font-size: var(--fs-sm); line-height: var(--lh-sm); }
   .frame { border-radius: 12px; }
 
   /* Facts stack into a compact two-column grid; stats stay three across */

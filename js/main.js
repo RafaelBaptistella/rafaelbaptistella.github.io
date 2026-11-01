@@ -72,9 +72,12 @@
           <div class="project__thumb frame" data-fade>
             <div class="project__media">${p.layers.map(frameLayer).join("")}</div>
           </div>
-          <div class="project__data">
-            <h2 class="project__title" data-split>${p.title}</h2>
-            <p class="project__subtitle" data-split>${p.subtitle}</p>
+          <div class="meta">
+            <div class="meta__row">
+              <h2 class="meta__title" data-split>${p.title}</h2>
+              <p class="meta__tags" data-split>${p.tags.join(" • ")}</p>
+            </div>
+            <p class="meta__subtitle" data-split>${p.subtitle}</p>
           </div>
         ${close}
       </article>`;

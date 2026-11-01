@@ -3,6 +3,7 @@
 
    title     Card title
    subtitle  Client or context, shown under the title
+   tags      Shown uppercase to the right of the title, separated by " • "
    href      Project page (relative to index.html); null = not published yet
    layers    Thumbnail composition, in px of the 720 × 400 Figma frame:
                { src, alt, x, y, w, h, shadow, radius }
@@ -17,6 +18,7 @@ window.PROJECTS = [
   {
     title: "Euristike Design System",
     subtitle: "My Design System",
+    tags: ["Design system", "General"],
     href: "projects/project-01.html",
     layers: [
       { src: "assets/projects/euristike-dash.jpg", alt: "Euristike dashboard built with the design system", x: 45, y: 87, w: 630, h: 354, shadow: true },
@@ -26,6 +28,7 @@ window.PROJECTS = [
   {
     title: "Managing shifts inside Brazil’s biggest hospitals",
     subtitle: "Rede D’Or",
+    tags: ["Desktop", "Healthcare"],
     href: "projects/project-02.html",
     layers: [
       // Exported with its shadow and corners baked in, hence the wider box and no CSS shadow
@@ -35,6 +38,7 @@ window.PROJECTS = [
   {
     title: "Improving the AI experience for +1M users",
     subtitle: "InnerAI",
+    tags: ["Mobile&Desktop", "AI"],
     href: "projects/project-03.html",
     layers: [
       { src: "assets/projects/innerai.jpg", alt: "InnerAI chat interface", x: 45, y: 42, w: 630, h: 408, shadow: true },
@@ -43,6 +47,7 @@ window.PROJECTS = [
   {
     title: "Making agricultural credit conveyor belt easier",
     subtitle: "Softfocus",
+    tags: ["Desktop", "Finance"],
     href: "projects/project-04.html",
     layers: [
       { src: "assets/projects/softfocus.png", alt: "Softfocus credit platform", x: 21, y: 36, w: 678, h: 372 },
@@ -51,6 +56,7 @@ window.PROJECTS = [
   {
     title: "Solving HR’s problems with a few ‘matches’",
     subtitle: "Harpio",
+    tags: ["Mobile&Desktop", "Human resources"],
     href: "projects/project-05.html",
     layers: [
       { src: "assets/projects/harpio.jpg", alt: "Harpio hiring platform", x: 45, y: 42.13, w: 629.65, h: 447.75, shadow: true },
@@ -59,6 +65,7 @@ window.PROJECTS = [
   {
     title: "Product Design overhaul for healthcare startup",
     subtitle: "Nyx technology",
+    tags: ["Mobile", "Healthcare"],
     href: "projects/project-06.html",
     layers: [
       { src: "assets/projects/nyx-1.jpg", alt: "Nyx app screen", x: 48, y: 42, w: 192, h: 519, shadow: true },
@@ -69,6 +76,7 @@ window.PROJECTS = [
   {
     title: "Turning dreams into relics",
     subtitle: "My SaaS",
+    tags: ["Desktop", "AI"],
     href: "projects/project-07.html",
     layers: [
       { src: "assets/projects/saas-1.jpg", alt: "SaaS app screen", x: 28, y: 42, w: 205, h: 314, shadow: true },
